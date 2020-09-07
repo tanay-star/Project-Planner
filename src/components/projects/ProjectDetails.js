@@ -3,10 +3,21 @@ import { connect } from 'react-redux';
 import { firestoreConnect } from 'react-redux-firebase';
 import { compose } from 'redux';
 import { Redirect } from 'react-router-dom';
+import { deleteProject } from '../../store/actions/projectActions';
 
-const ProjectDetails = (props) => {
+class ProjectDetails extends React.Component {
   // const id = props.match.params.id;
-  const { project, auth  } = props; 
+  
+
+  handleDelete = e => {
+    const { id } = this.props;
+    e.preventDefault();
+    this.props.deleteProject(id);
+    // you can push to dashboard after deleting...
+}
+
+  render(){
+  const { project, auth, id  } = this.props; 
 
   if(!auth.uid) return <Redirect to='/signin'/>
 
@@ -18,17 +29,19 @@ const ProjectDetails = (props) => {
              <div className='card-title'>{ project.title }</div>
              <p>{ project.content }</p>
            </div>
+           <button onClick={this.handleDelete}>Delete</button>
          </div>
       </div>
   )
   }
   else{
     return (
-      <div className='container center'>
-        <p>loading project...</p>
+      <div className='red-text center'>
+        <p>project deleted</p>
       </div>
     )
   }
+}
 }
 
 const mapStateToProps = ( state, ownProps ) => {
@@ -37,12 +50,19 @@ const mapStateToProps = ( state, ownProps ) => {
   const project  = projects ? projects[id] : null; //getting the perticular project from the list of projects.
   return{
     project: project,
-    auth: state.firebase.auth
+    auth: state.firebase.auth,
+    id: id
+  }
+}
+
+const mapDispatchToProps = dispatch => {
+  return {
+      deleteProject: (id) => dispatch(deleteProject(id))
   }
 }
 
 export default compose(
-  connect(mapStateToProps,null),
+  connect(mapStateToProps,mapDispatchToProps),
   firestoreConnect([
     { collection: 'projects' }
   ])
