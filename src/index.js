@@ -13,10 +13,13 @@ import { getFirestore, reduxFirestore,  createFirestoreInstance } from 'redux-fi
 import { getFirebase, ReactReduxFirebaseProvider } from 'react-redux-firebase';
 import firebase from './config/fbConfig';
 import 'firebase/firestore';
+//for render on auth ready
+import { useSelector  } from 'react-redux'
+import { isLoaded  } from 'react-redux-firebase';
 
 
 const rrfConfig = { 
-  userProfile: 'projects',
+  userProfile: 'users',
   useFirestoreForProfile: true
 }
 
@@ -24,23 +27,39 @@ const rrfConfig = {
 
 const store = createStore(rootReducer,compose(
   applyMiddleware(thunk.withExtraArgument({ getFirebase, getFirestore })),
-  reduxFirestore(firebase)
+  reduxFirestore(firebase),
 )
 );
 
-const rffProps = {
-  firebase,
+const profileSpecificProps = {
+  userProfile: 'users',
   useFirestoreForProfile: true,
+  enableRedirectHandling: false,
+  resetBeforeLogin: false
+}
+
+const rrfProps = {
+  firebase,
   config: rrfConfig,
+  config:  profileSpecificProps,
   dispatch: store.dispatch,
   createFirestoreInstance
 }
 
+function AuthIsLoaded({ children }) {
+  const auth = useSelector(state => state.firebase.auth)
+  if (!isLoaded(auth)) return <div className="center"> <p>Loading Mario Plan...</p></div>;
+      return children
+}
+
+
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>
-      <ReactReduxFirebaseProvider {...rffProps}>
+      <ReactReduxFirebaseProvider {...rrfProps}>
+      <AuthIsLoaded>
         <App />
+      </AuthIsLoaded>
      </ReactReduxFirebaseProvider>
     </Provider>
   </React.StrictMode>,

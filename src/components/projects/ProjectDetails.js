@@ -1,20 +1,49 @@
 import React from 'react';
+import { connect } from 'react-redux';
+import { firestoreConnect } from 'react-redux-firebase';
+import { compose } from 'redux';
+import { Redirect } from 'react-router-dom';
 
 const ProjectDetails = (props) => {
-  const id = props.match.params.id;
+  // const id = props.match.params.id;
+  const { project, auth  } = props; 
+
+  if(!auth.uid) return <Redirect to='/signin'/>
+
+  if( project ){
   return(
       <div className='container section project-details'>
          <div className='card z-depth-0'>
            <div className='card-content'>
-             <div className='card-title'>Project Title - {id}</div>
-             <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
-           </div>
-           <div className='card-action grey lighten-4 grey-text'>
-             <div>posted by Tanay Banerjee</div>
-             <div>2nd September 2020</div>
+             <div className='card-title'>{ project.title }</div>
+             <p>{ project.content }</p>
            </div>
          </div>
       </div>
   )
+  }
+  else{
+    return (
+      <div className='container center'>
+        <p>loading project...</p>
+      </div>
+    )
+  }
 }
-export default ProjectDetails;
+
+const mapStateToProps = ( state, ownProps ) => {
+  const id = ownProps.match.params.id;
+  const projects = state.firestore.data.projects;
+  const project  = projects ? projects[id] : null; //getting the perticular project from the list of projects.
+  return{
+    project: project,
+    auth: state.firebase.auth
+  }
+}
+
+export default compose(
+  connect(mapStateToProps,null),
+  firestoreConnect([
+    { collection: 'projects' }
+  ])
+)(ProjectDetails);
